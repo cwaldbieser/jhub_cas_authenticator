@@ -22,19 +22,16 @@ class CASLoginHandler(BaseHandler):
     """
 
     def get(self):
-        service = self.get_argument("service", None)
         ticket = self.get_argument("ticket", None)
-        has_service_ticket = not (service is None or ticket is None)
+        has_service_ticket = not ticket is None
         if not has_service_ticket: 
-            cas_service_url = self.authenticator.cas_service_url
-            if cas_service_url is None:
-                cas_service_url = self.request.protocol + "://" + self.request.host + self.request.uri
+            cas_service_url = self.make_service_url()
             qs_map = dict(service=cas_service_url)
             qs = urllib.parse.urlencode(qs_map)
             url = "{0}?{1}".format(self.authenticator.cas_login_url, qs) 
             self.redirect(url)
         else:
-            is_valid, user, attributes = self.validate_service_ticket(service, ticket)
+            is_valid, user, attributes = self.validate_service_ticket(ticket)
             if is_valid:
                 required_attribs = self.authenticator.cas_required_attribs
                 if not required_attribs.issubset(attributes):
@@ -44,8 +41,17 @@ class CASLoginHandler(BaseHandler):
             else:
                 raise web.HTTPError(401)
 
+    def make_service_url(self):
+        """
+        Make the service URL CAS will use to redirect the browser back to this service.
+        """
+        cas_service_url = self.authenticator.cas_service_url
+        if cas_service_url is None:
+            cas_service_url = self.request.protocol + "://" + self.request.host + self.request.uri
+        return cas_service_url
+
     @gen.coroutine
-    def validate_service_ticket(self, service, ticket):
+    def validate_service_ticket(self, ticket):
         """
         Validate a CAS service ticket.
 
@@ -54,6 +60,7 @@ class CASLoginHandler(BaseHandler):
         `attribs` - set of attribute-value tuples.
         """
         http_client = AsyncHTTPClient()
+        service = self.make_service_url()
         qs_dict = dict(service=service, ticket=ticket)
         qs = urllib.parse.urlencode(qs_dict)
         cas_validate_url = self.authenticator.cas_servce_validate_url + "?" + qs
