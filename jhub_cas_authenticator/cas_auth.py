@@ -31,7 +31,7 @@ class CASLoginHandler(BaseHandler):
             url = "{0}?{1}".format(self.authenticator.cas_login_url, qs) 
             self.redirect(url)
         else:
-            is_valid, user, attributes = self.validate_service_ticket(ticket)
+            is_valid, user, attributes = yield self.validate_service_ticket(ticket)
             if is_valid:
                 required_attribs = self.authenticator.cas_required_attribs
                 if not required_attribs.issubset(attributes):
