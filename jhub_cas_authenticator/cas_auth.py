@@ -1,4 +1,5 @@
 
+import logging
 import os
 import urllib.parse
 from jupyterhub.handlers import BaseHandler
@@ -21,22 +22,38 @@ class CASLoginHandler(BaseHandler):
     Authenticate users via the CAS protocol.
     """
 
+    @gen.coroutine
     def get(self):
+        app_log = logging.getLogger("tornado.application")
         ticket = self.get_argument("ticket", None)
         has_service_ticket = not ticket is None
+        app_log.debug("Has service ticket? {0}".format(has_service_ticket))
         if not has_service_ticket: 
             cas_service_url = self.make_service_url()
             qs_map = dict(service=cas_service_url)
             qs = urllib.parse.urlencode(qs_map)
             url = "{0}?{1}".format(self.authenticator.cas_login_url, qs) 
+            app_log.debug("Redirecting to CAS to get service ticket: {0}".format(url))
             self.redirect(url)
         else:
-            is_valid, user, attributes = yield self.validate_service_ticket(ticket)
+            app_log.debug("Validating service ticket {0}...".format(ticket[:10]))
+            result = yield self.validate_service_ticket(ticket)
+            is_valid, user, attributes = result
             if is_valid:
+                app_log.debug("Service ticket was valid.")
+                app_log.debug("User is '{0}'.".format(user))
+                for a, v in attributes:
+                    app_log.debug("Attribute {0}: {1}".format(a, v))
                 required_attribs = self.authenticator.cas_required_attribs
                 if not required_attribs.issubset(attributes):
+                    app_log.debug("Missing required attributes:")
+                    missing = required_attribs - attributes
+                    for a, v in missing:
+                        app_log.debug("Attribute {0}: {1}".format(a, v))
                     web.HTTPError(401)
-                self.set_login_cookie(user)
+                app_log.debug("CAS authentication successful for '{0}'.".format(user))
+                avatar = self.user_from_username(user)
+                self.set_login_cookie(avatar)
                 self.redirect(url_path_join(self.hub.server.base_url, 'home'))
             else:
                 raise web.HTTPError(401)
@@ -63,30 +80,34 @@ class CASLoginHandler(BaseHandler):
         service = self.make_service_url()
         qs_dict = dict(service=service, ticket=ticket)
         qs = urllib.parse.urlencode(qs_dict)
-        cas_validate_url = self.authenticator.cas_servce_validate_url + "?" + qs
+        cas_validate_url = self.authenticator.cas_service_validate_url + "?" + qs
+        response = None
+        print("Validate URL: {0}".format(cas_validate_url))
         try:
             response = yield http_client.fetch(
                 cas_validate_url, 
                 method="GET",
                 ca_certs=self.authenticator.cas_client_ca_certs)
+            print("Response was successful: {0}".format(response))
         except HTTPError as ex:
             return (False, None, None)
-        
         parser = etree.XMLParser()
-        root = etree.fromstring(data, parser=parser)
+        root = etree.fromstring(response.body, parser=parser)
         auth_result_elm = root[0]
-        is_success == (etree.QName(auth_result_elm).localname == 'authenticationSuccess')
+        is_success = (etree.QName(auth_result_elm).localname == 'authenticationSuccess')
         if not is_success:
             return (False, None, None)
         user_elm = find_child_element(auth_result_elm, "user")
         user = user_elm.text.lower()
         attrib_results = set([])
-        attribs = root[0][1]
+        attribs = find_child_element(auth_result_elm, "attributes")
+        if attribs is None:
+            attribs = []
         for attrib in attribs:
             name = etree.QName(attrib).localname
             value = attrib.text
-            attrib_set.add(tuple(name, value))
-        return tuple(True, user, attrib_set)
+            attrib_set.add((name, value))
+        return (True, user, attrib_results)
         
 
 class CASAuthenticator(Authenticator):
