@@ -1,3 +1,5 @@
 
 __pycache__/
-
+jhub_cas_authenticator.egg-info/
+build/
+dist/
