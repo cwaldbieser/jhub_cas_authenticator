@@ -1,6 +1,6 @@
-====================================
-Jupyterhub REMOTE_USER Authenticator
-====================================
+============================
+Jupyterhub CAS Authenticator
+============================
 
 Authenticate to Jupyterhub using the CAS 3.0 protocol
 (https://apereo.github.io/cas/5.1.x/protocol/CAS-Protocol-Specification.html)
