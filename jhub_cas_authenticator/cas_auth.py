@@ -106,7 +106,7 @@ class CASLoginHandler(BaseHandler):
         for attrib in attribs:
             name = etree.QName(attrib).localname
             value = attrib.text
-            attrib_set.add((name, value))
+            attrib_results.add((name, value))
         return (True, user, attrib_results)
         
 
