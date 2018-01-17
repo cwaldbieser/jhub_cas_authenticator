@@ -42,6 +42,7 @@ setup_args = dict(
 if 'setuptools' in sys.modules:
     setup_args['install_requires'] = install_requires = []
     install_requires.append('jupyterhub')
+    install_requires.append('lxml')
 
 def main():
     setup(**setup_args)
