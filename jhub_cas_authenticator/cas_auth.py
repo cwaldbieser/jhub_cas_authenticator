@@ -3,7 +3,10 @@ import logging
 import os
 import urllib.parse
 from jupyterhub.handlers import BaseHandler
-from jupyterhub.auth import Authenticator
+from jupyterhub.auth import (
+    Authenticator,
+    LocalAuthenticator,
+)
 from jupyterhub.utils import url_path_join
 from lxml import etree
 from tornado import gen, web
@@ -111,6 +114,45 @@ class CASLoginHandler(BaseHandler):
         
 
 class CASAuthenticator(Authenticator):
+    """
+    Validate a CAS service ticket and optionally check for the presence of an
+    authorization attribute.
+    """
+    cas_login_url = Unicode(
+        config=True,
+        help="""The CAS URL to redirect unauthenticated users to.""")
+
+    cas_service_url = Unicode(
+        allow_none=True,
+        default_value=None,
+        config=True,
+        help="""The service URL the CAS server will redirect the browser back to on successful authentication.""")
+
+    cas_client_ca_certs = Unicode(
+        allow_none=True,
+        default_value=None,
+        config=True,
+        help="""Path to CA certificates the CAS client will trust when validating a service ticket.""")
+
+    cas_service_validate_url = Unicode(
+        config=True,
+        help="""The CAS endpoint for validating service tickets.""")
+
+    cas_required_attribs = Set(
+            help="A set of attribute name and value tuples a user must have to be allowed access."
+        ).tag(config=True)
+
+    def get_handlers(self, app):
+        return [
+            (r'/login', CASLoginHandler),
+        ]
+
+    @gen.coroutine
+    def authenticate(self, *args):
+        raise NotImplementedError()
+
+
+class CASLocalAuthenticator(LocalAuthenticator):
     """
     Validate a CAS service ticket and optionally check for the presence of an
     authorization attribute.
