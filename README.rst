@@ -60,7 +60,7 @@ user, it can be useful to use `CASLocalAuthenticator` instead of
 `CASAuthenticator`.  The former inherits from `LocalAuthenticator` and has the
 property `create_system_users`.  You can use it like this:
 
-.. code: python
+.. code:: python
 
     c.JupyterHub.authenticator_class = 'jhub_cas_authenticator.cas_auth.CASLocalAuthenticator'
     # The CAS URL to redirect unauthenticated users to.
