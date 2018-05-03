@@ -20,6 +20,25 @@ from traitlets import (
 )
 
 
+class CASLogoutHandler(BaseHandler):
+    """
+    Log a user out by clearing their login cookie and redirecting
+    to the CAS logout URL.
+    """
+
+    @gen.coroutine
+    def get(self):
+        user = self.get_current_user()
+        if user:
+            self.log.info("User logged out: %s", user.name)
+            self.clear_login_cookie()
+            self.statsd.incr('logout')
+
+        url = self.authenticator.cas_logout_url
+        self.log.debug("Redirecting to CAS logout: {0}".format(url))
+        self.redirect(url, permanent=False)
+
+
 class CASLoginHandler(BaseHandler):
     """
     Authenticate users via the CAS protocol.
@@ -122,6 +141,10 @@ class CASAuthenticator(Authenticator):
         config=True,
         help="""The CAS URL to redirect unauthenticated users to.""")
 
+    cas_logout_url = Unicode(
+        config=True,
+        help="""The CAS URL for logging out an authenticated user.""")
+
     cas_service_url = Unicode(
         allow_none=True,
         default_value=None,
@@ -145,6 +168,7 @@ class CASAuthenticator(Authenticator):
     def get_handlers(self, app):
         return [
             (r'/login', CASLoginHandler),
+            (r'/logout', CASLogoutHandler),
         ]
 
     @gen.coroutine
@@ -161,6 +185,10 @@ class CASLocalAuthenticator(LocalAuthenticator):
         config=True,
         help="""The CAS URL to redirect unauthenticated users to.""")
 
+    cas_logout_url = Unicode(
+        config=True,
+        help="""The CAS URL for logging out an authenticated user.""")
+
     cas_service_url = Unicode(
         allow_none=True,
         default_value=None,
@@ -184,6 +212,7 @@ class CASLocalAuthenticator(LocalAuthenticator):
     def get_handlers(self, app):
         return [
             (r'/login', CASLoginHandler),
+            (r'/logout', CASLogoutHandler),
         ]
 
     @gen.coroutine
