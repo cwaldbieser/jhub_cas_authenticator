@@ -65,6 +65,8 @@ property `create_system_users`.  You can use it like this:
     c.JupyterHub.authenticator_class = 'jhub_cas_authenticator.cas_auth.CASLocalAuthenticator'
     # The CAS URL to redirect unauthenticated users to.
     c.CASLocalAuthenticator.cas_login_url = 'https://cas.example.net/cas/login'
+    # The CAS URL for logging out an authenticated user.
+    c.CASLocalAuthenticator.cas_logout_url = 'https://cas.example.net/cas/logout'
     # The service URL the CAS server will redirect the browser back to on successful authentication.
     # If not set, this is set to the same URL the request comes in on.  This will work fine for
     # simple deployments, but deployments behind a proxy or load banalncer will likely need to
