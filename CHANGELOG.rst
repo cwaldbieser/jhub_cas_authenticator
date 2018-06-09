@@ -6,7 +6,14 @@ Change Log
 Contributers
 ------------
 
-* Carl Waldbieser
+* Carl Waldbieser (https://github.com/cwaldbieser)
+* Mark Liffiton (https://github.com/liffiton)
+
+------
+v0.2.0
+------
+
+* Added CAS logout feature. 
 
 ------
 v0.1.0
