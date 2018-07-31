@@ -76,7 +76,7 @@ class CASLoginHandler(BaseHandler):
                 app_log.debug("CAS authentication successful for '{0}'.".format(user))
                 avatar = self.user_from_username(user)
                 self.set_login_cookie(avatar)
-                self.redirect(url_path_join(self.hub.server.base_url, 'home'))
+                self.redirect(self.get_next_url(avatar))
             else:
                 raise web.HTTPError(401)
 
