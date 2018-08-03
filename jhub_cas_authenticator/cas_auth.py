@@ -50,6 +50,8 @@ class CASLoginHandler(BaseHandler):
         ticket = self.get_argument("ticket", None)
         has_service_ticket = not ticket is None
         app_log.debug("Has service ticket? {0}".format(has_service_ticket))
+
+        # Redirect to get ticket if not presenting one
         if not has_service_ticket: 
             cas_service_url = self.make_service_url()
             qs_map = dict(service=cas_service_url)
@@ -57,28 +59,42 @@ class CASLoginHandler(BaseHandler):
             url = "{0}?{1}".format(self.authenticator.cas_login_url, qs) 
             app_log.debug("Redirecting to CAS to get service ticket: {0}".format(url))
             self.redirect(url)
-        else:
-            app_log.debug("Validating service ticket {0}...".format(ticket[:10]))
-            result = yield self.validate_service_ticket(ticket)
-            is_valid, user, attributes = result
-            if is_valid:
-                app_log.debug("Service ticket was valid.")
-                app_log.debug("User is '{0}'.".format(user))
-                for a, v in attributes:
-                    app_log.debug("Attribute {0}: {1}".format(a, v))
-                required_attribs = self.authenticator.cas_required_attribs
-                if not required_attribs.issubset(attributes):
-                    app_log.debug("Missing required attributes:")
-                    missing = required_attribs - attributes
-                    for a, v in missing:
-                        app_log.debug("Attribute {0}: {1}".format(a, v))
-                    raise web.HTTPError(401)
-                app_log.debug("CAS authentication successful for '{0}'.".format(user))
-                avatar = self.user_from_username(user)
-                self.set_login_cookie(avatar)
-                self.redirect(self.get_next_url(avatar))
-            else:
-                raise web.HTTPError(401)
+            return
+
+        # Validate ticket
+        app_log.debug("Validating service ticket {0}...".format(ticket[:10]))
+        result = yield self.validate_service_ticket(ticket)
+        is_valid, user, attributes = result
+        if not is_valid:
+            raise web.HTTPError(401)
+
+        app_log.debug("Service ticket was valid.")
+        app_log.debug("User is '{0}'.".format(user))
+        for a, v in attributes:
+            app_log.debug("Attribute {0}: {1}".format(a, v))
+
+        # Check for required attributes
+        required_attribs = self.authenticator.cas_required_attribs
+        if not required_attribs.issubset(attributes):
+            app_log.debug("Missing required attributes:")
+            missing = required_attribs - attributes
+            for a, v in missing:
+                app_log.debug("Attribute {0}: {1}".format(a, v))
+            raise web.HTTPError(401)
+
+        # Check against whitelist
+        whitelist = self.authenticator.whitelist
+        if whitelist and user not in whitelist:
+            app_log.debug("User not in whitelist: {0}".format(user))
+            raise web.HTTPError(401)
+
+        # Success!  Log user in.
+        app_log.debug("CAS authentication successful for '{0}'.".format(user))
+        avatar = self.user_from_username(user)
+        self.set_login_cookie(avatar)
+        next_url = self.get_next_url(avatar)
+        app_log.debug("CAS redirecting to: {0}".format(next_url))
+        self.redirect(next_url)
 
     def make_service_url(self):
         """
