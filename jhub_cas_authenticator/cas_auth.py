@@ -72,7 +72,7 @@ class CASLoginHandler(BaseHandler):
                     missing = required_attribs - attributes
                     for a, v in missing:
                         app_log.debug("Attribute {0}: {1}".format(a, v))
-                    web.HTTPError(401)
+                    raise web.HTTPError(401)
                 app_log.debug("CAS authentication successful for '{0}'.".format(user))
                 avatar = self.user_from_username(user)
                 self.set_login_cookie(avatar)
