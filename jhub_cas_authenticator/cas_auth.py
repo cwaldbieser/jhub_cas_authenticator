@@ -1,13 +1,11 @@
 
 import logging
-import os
 import urllib.parse
 from jupyterhub.handlers import BaseHandler
 from jupyterhub.auth import (
     Authenticator,
     LocalAuthenticator,
 )
-from jupyterhub.utils import url_path_join
 from lxml import etree
 from tornado import gen, web
 from tornado.httpclient import (
@@ -48,15 +46,15 @@ class CASLoginHandler(BaseHandler):
     def get(self):
         app_log = logging.getLogger("tornado.application")
         ticket = self.get_argument("ticket", None)
-        has_service_ticket = not ticket is None
+        has_service_ticket = ticket is not None
         app_log.debug("Has service ticket? {0}".format(has_service_ticket))
 
         # Redirect to get ticket if not presenting one
-        if not has_service_ticket: 
+        if not has_service_ticket:
             cas_service_url = self.make_service_url()
             qs_map = dict(service=cas_service_url)
             qs = urllib.parse.urlencode(qs_map)
-            url = "{0}?{1}".format(self.authenticator.cas_login_url, qs) 
+            url = "{0}?{1}".format(self.authenticator.cas_login_url, qs)
             app_log.debug("Redirecting to CAS to get service ticket: {0}".format(url))
             self.redirect(url)
             return
@@ -123,7 +121,7 @@ class CASLoginHandler(BaseHandler):
         print("Validate URL: {0}".format(cas_validate_url))
         try:
             response = yield http_client.fetch(
-                cas_validate_url, 
+                cas_validate_url,
                 method="GET",
                 ca_certs=self.authenticator.cas_client_ca_certs)
             print("Response was successful: {0}".format(response))
@@ -146,7 +144,7 @@ class CASLoginHandler(BaseHandler):
             value = attrib.text
             attrib_results.add((name, value))
         return (True, user, attrib_results)
-        
+
 
 class CASAuthenticator(Authenticator):
     """
@@ -246,4 +244,3 @@ def find_child_element(elm, child_local_name):
         if tag.localname == child_local_name:
             return child_elm
     return None
-        
