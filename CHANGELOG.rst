@@ -10,6 +10,12 @@ Contributers
 * Mark Liffiton (https://github.com/liffiton)
 
 ------
+v0.3.0
+------
+
+* Added whitelist feature.
+
+------
 v0.2.0
 ------
 
