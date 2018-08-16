@@ -9,4 +9,4 @@ Release Procedures
 .. code:: bash
 
     $ python3 setup.py sdist bdist_wheel
-    $ne upload dist/* 
+    $ twine upload dist/* 
