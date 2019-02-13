@@ -112,20 +112,22 @@ class CASLoginHandler(BaseHandler):
         `is_valid` - boolean
         `attribs` - set of attribute-value tuples.
         """
+        app_log = logging.getLogger("tornado.application")
         http_client = AsyncHTTPClient()
         service = self.make_service_url()
         qs_dict = dict(service=service, ticket=ticket)
         qs = urllib.parse.urlencode(qs_dict)
         cas_validate_url = self.authenticator.cas_service_validate_url + "?" + qs
         response = None
-        print("Validate URL: {0}".format(cas_validate_url))
+        app_log.debug("Validate URL: {0}".format(cas_validate_url))
         try:
             response = yield http_client.fetch(
                 cas_validate_url,
                 method="GET",
                 ca_certs=self.authenticator.cas_client_ca_certs)
-            print("Response was successful: {0}".format(response))
+            app_log.debug("Response was successful: {0}".format(response))
         except HTTPError as ex:
+            app_log.debug("Response was unsuccessful: {0}".format(response))
             return (False, None, None)
         parser = etree.XMLParser()
         root = etree.fromstring(response.body, parser=parser)
