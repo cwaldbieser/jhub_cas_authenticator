@@ -25,7 +25,7 @@ class CASLogoutHandler(BaseHandler):
     """
 
     async def get(self):
-        user = await self.get_current_user()
+        user = self.current_user
         if user:
             self.log.info("User logged out: %s", user.name)
             self.clear_login_cookie()
