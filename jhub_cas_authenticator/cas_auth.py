@@ -7,7 +7,7 @@ from jupyterhub.auth import (
     LocalAuthenticator,
 )
 from lxml import etree
-from tornado import gen, web
+from tornado import web
 from tornado.httpclient import (
     AsyncHTTPClient,
     HTTPError,
@@ -24,9 +24,8 @@ class CASLogoutHandler(BaseHandler):
     to the CAS logout URL.
     """
 
-    @gen.coroutine
-    def get(self):
-        user = self.get_current_user()
+    async def get(self):
+        user = await self.get_current_user()
         if user:
             self.log.info("User logged out: %s", user.name)
             self.clear_login_cookie()
@@ -42,8 +41,7 @@ class CASLoginHandler(BaseHandler):
     Authenticate users via the CAS protocol.
     """
 
-    @gen.coroutine
-    def get(self):
+    async def get(self):
         app_log = logging.getLogger("tornado.application")
         ticket = self.get_argument("ticket", None)
         has_service_ticket = ticket is not None
@@ -61,7 +59,7 @@ class CASLoginHandler(BaseHandler):
 
         # Validate ticket
         app_log.debug("Validating service ticket {0}...".format(ticket[:10]))
-        result = yield self.validate_service_ticket(ticket)
+        result = await self.validate_service_ticket(ticket)
         is_valid, user, attributes = result
         if not is_valid:
             raise web.HTTPError(401)
@@ -103,8 +101,7 @@ class CASLoginHandler(BaseHandler):
             cas_service_url = self.request.protocol + "://" + self.request.host + self.request.uri
         return cas_service_url
 
-    @gen.coroutine
-    def validate_service_ticket(self, ticket):
+    async def validate_service_ticket(self, ticket):
         """
         Validate a CAS service ticket.
 
@@ -121,7 +118,7 @@ class CASLoginHandler(BaseHandler):
         response = None
         app_log.debug("Validate URL: {0}".format(cas_validate_url))
         try:
-            response = yield http_client.fetch(
+            response = await http_client.fetch(
                 cas_validate_url,
                 method="GET",
                 ca_certs=self.authenticator.cas_client_ca_certs)
@@ -187,8 +184,7 @@ class CASAuthenticator(Authenticator):
             (r'/logout', CASLogoutHandler),
         ]
 
-    @gen.coroutine
-    def authenticate(self, *args):
+    async def authenticate(self, *args):
         raise NotImplementedError()
 
 
@@ -231,8 +227,7 @@ class CASLocalAuthenticator(LocalAuthenticator):
             (r'/logout', CASLogoutHandler),
         ]
 
-    @gen.coroutine
-    def authenticate(self, *args):
+    async def authenticate(self, *args):
         raise NotImplementedError()
 
 
