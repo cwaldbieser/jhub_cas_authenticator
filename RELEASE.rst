@@ -2,7 +2,7 @@
 Release Procedures
 ==================
 
-* Edit version in :file:`version.py`.
+* Edit version_label in :file:`setup.py`.
 * Update file:`CHANGELOG.rst`
 * Tag the git repo with the version.
 

@@ -10,6 +10,12 @@ Contributers
 * Mark Liffiton (https://github.com/liffiton)
 
 ------
+v1.0.0
+------
+
+* Newer Jupyterhub uses Python native coroutines.
+
+------
 v0.3.0
 ------
 

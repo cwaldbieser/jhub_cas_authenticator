@@ -11,15 +11,12 @@ from setuptools import setup
 pjoin = os.path.join
 here = os.path.abspath(os.path.dirname(__file__))
 
-# Get the current package version.
-version_ns = {}
-with open(pjoin(here, 'version.py')) as f:
-    exec(f.read(), {}, version_ns)
+version_label = '1.0.0'
 
 setup_args = dict(
     name                = 'jhub_cas_authenticator',
     packages            = ['jhub_cas_authenticator'],
-    version             = version_ns['__version__'],
+    version             = version_label,
     description         = """CAS Authenticator: An Authenticator for Jupyterhub that authenticates against an external CAS service.""",
     long_description    = "",
     author              = "Carl (https://github.com/cwaldbieser)",
