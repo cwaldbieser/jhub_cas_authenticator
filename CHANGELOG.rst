@@ -10,6 +10,17 @@ Contributers
 * Mark Liffiton (https://github.com/liffiton)
 
 ------
+v1.0.1
+------
+
+* CASLocalAuthenticator did not create system users at login-time.  Users were
+  only created on Jupyterhub restart.
+* Thanks to the following individuals for raising this issue and/or testing!
+    * Prebagarane Louvois
+    * Gary Molenkamp
+    * miguelmarco
+
+------
 v1.0.0
 ------
 
