@@ -6,6 +6,7 @@ from jupyterhub.auth import (
     Authenticator,
     LocalAuthenticator,
 )
+from jupyterhub.utils import maybe_future
 from lxml import etree
 from tornado import web
 from tornado.httpclient import (
@@ -90,7 +91,7 @@ class CASLoginHandler(BaseHandler):
         self.set_login_cookie(avatar)
         next_url = self.get_next_url(avatar)
         app_log.debug("Calling authenticator.add_user() for '{}'".format(avatar))
-        await self.authenticator.add_user(avatar)
+        await maybe_future(self.authenticator.add_user(avatar))
         app_log.debug("CAS redirecting to: {0}".format(next_url))
         self.redirect(next_url)
 
