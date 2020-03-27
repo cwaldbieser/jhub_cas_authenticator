@@ -8,6 +8,13 @@ Contributers
 
 * Carl Waldbieser (https://github.com/cwaldbieser)
 * Mark Liffiton (https://github.com/liffiton)
+* niedhui@gmail.com
+
+------
+v1.0.2
+------
+
+* CAS login handler corrected to handle defered responses.
 
 ------
 v1.0.1

@@ -11,7 +11,7 @@ from setuptools import setup
 pjoin = os.path.join
 here = os.path.abspath(os.path.dirname(__file__))
 
-version_label = '1.0.1'
+version_label = '1.0.2'
 
 setup_args = dict(
     name                = 'jhub_cas_authenticator',
