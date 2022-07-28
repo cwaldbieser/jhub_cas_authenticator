@@ -26,7 +26,7 @@ Alternately, you can add the local project folder must be on your PYTHONPATH.
 Configuration
 -------------
 
-You should edit your :file:`jupyterhub_config.py` to set the authenticator 
+You should edit your :file:`jupyterhub_config.py` to set the authenticator
 class::
 
     c.JupyterHub.authenticator_class = 'jhub_cas_authenticator.cas_auth.CASAuthenticator'

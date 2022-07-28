@@ -1,22 +1,13 @@
-
 import logging
 import urllib.parse
+
+from jupyterhub.auth import Authenticator, LocalAuthenticator
 from jupyterhub.handlers import BaseHandler
-from jupyterhub.auth import (
-    Authenticator,
-    LocalAuthenticator,
-)
 from jupyterhub.utils import maybe_future
 from lxml import etree
 from tornado import web
-from tornado.httpclient import (
-    AsyncHTTPClient,
-    HTTPError,
-)
-from traitlets import (
-    Set,
-    Unicode,
-)
+from tornado.httpclient import AsyncHTTPClient, HTTPError
+from traitlets import Set, Unicode
 
 
 class CASLogoutHandler(BaseHandler):
@@ -30,7 +21,7 @@ class CASLogoutHandler(BaseHandler):
         if user:
             self.log.info("User logged out: %s", user.name)
             self.clear_login_cookie()
-            self.statsd.incr('logout')
+            self.statsd.incr("logout")
 
         url = self.authenticator.cas_logout_url
         self.log.debug("Redirecting to CAS logout: {0}".format(url))
@@ -101,7 +92,9 @@ class CASLoginHandler(BaseHandler):
         """
         cas_service_url = self.authenticator.cas_service_url
         if cas_service_url is None:
-            cas_service_url = self.request.protocol + "://" + self.request.host + self.request.uri
+            cas_service_url = (
+                self.request.protocol + "://" + self.request.host + self.request.uri
+            )
         return cas_service_url
 
     async def validate_service_ticket(self, ticket):
@@ -124,15 +117,16 @@ class CASLoginHandler(BaseHandler):
             response = await http_client.fetch(
                 cas_validate_url,
                 method="GET",
-                ca_certs=self.authenticator.cas_client_ca_certs)
+                ca_certs=self.authenticator.cas_client_ca_certs,
+            )
             app_log.debug("Response was successful: {0}".format(response))
-        except HTTPError as ex:
+        except HTTPError:
             app_log.debug("Response was unsuccessful: {0}".format(response))
             return (False, None, None)
         parser = etree.XMLParser()
         root = etree.fromstring(response.body, parser=parser)
         auth_result_elm = root[0]
-        is_success = (etree.QName(auth_result_elm).localname == 'authenticationSuccess')
+        is_success = etree.QName(auth_result_elm).localname == "authenticationSuccess"
         if not is_success:
             return (False, None, None)
         user_elm = find_child_element(auth_result_elm, "user")
@@ -153,38 +147,47 @@ class CASAuthenticator(Authenticator):
     Validate a CAS service ticket and optionally check for the presence of an
     authorization attribute.
     """
+
     cas_login_url = Unicode(
-        config=True,
-        help="""The CAS URL to redirect unauthenticated users to.""")
+        config=True, help="""The CAS URL to redirect unauthenticated users to."""
+    )
 
     cas_logout_url = Unicode(
-        config=True,
-        help="""The CAS URL for logging out an authenticated user.""")
+        config=True, help="""The CAS URL for logging out an authenticated user."""
+    )
 
     cas_service_url = Unicode(
         allow_none=True,
         default_value=None,
         config=True,
-        help="""The service URL the CAS server will redirect the browser back to on successful authentication.""")
+        help=(
+            """The service URL the CAS server will redirect """
+            """the browser back to on successful authentication."""
+        ),
+    )
 
     cas_client_ca_certs = Unicode(
         allow_none=True,
         default_value=None,
         config=True,
-        help="""Path to CA certificates the CAS client will trust when validating a service ticket.""")
+        help=(
+            """Path to CA certificates the CAS client will trust """
+            """when validating a service ticket."""
+        ),
+    )
 
     cas_service_validate_url = Unicode(
-        config=True,
-        help="""The CAS endpoint for validating service tickets.""")
+        config=True, help="""The CAS endpoint for validating service tickets."""
+    )
 
     cas_required_attribs = Set(
-            help="A set of attribute name and value tuples a user must have to be allowed access."
-        ).tag(config=True)
+        help="A set of attribute name and value tuples a user must have to be allowed access."
+    ).tag(config=True)
 
     def get_handlers(self, app):
         return [
-            (r'/login', CASLoginHandler),
-            (r'/logout', CASLogoutHandler),
+            (r"/login", CASLoginHandler),
+            (r"/logout", CASLogoutHandler),
         ]
 
     async def authenticate(self, *args):
@@ -196,38 +199,47 @@ class CASLocalAuthenticator(LocalAuthenticator):
     Validate a CAS service ticket and optionally check for the presence of an
     authorization attribute.
     """
+
     cas_login_url = Unicode(
-        config=True,
-        help="""The CAS URL to redirect unauthenticated users to.""")
+        config=True, help="""The CAS URL to redirect unauthenticated users to."""
+    )
 
     cas_logout_url = Unicode(
-        config=True,
-        help="""The CAS URL for logging out an authenticated user.""")
+        config=True, help="""The CAS URL for logging out an authenticated user."""
+    )
 
     cas_service_url = Unicode(
         allow_none=True,
         default_value=None,
         config=True,
-        help="""The service URL the CAS server will redirect the browser back to on successful authentication.""")
+        help=(
+            """The service URL the CAS server will redirect the """
+            """browser back to on successful authentication."""
+        ),
+    )
 
     cas_client_ca_certs = Unicode(
         allow_none=True,
         default_value=None,
         config=True,
-        help="""Path to CA certificates the CAS client will trust when validating a service ticket.""")
+        help=(
+            """Path to CA certificates the CAS client will """
+            """trust when validating a service ticket."""
+        ),
+    )
 
     cas_service_validate_url = Unicode(
-        config=True,
-        help="""The CAS endpoint for validating service tickets.""")
+        config=True, help="""The CAS endpoint for validating service tickets."""
+    )
 
     cas_required_attribs = Set(
-            help="A set of attribute name and value tuples a user must have to be allowed access."
-        ).tag(config=True)
+        help="A set of attribute name and value tuples a user must have to be allowed access."
+    ).tag(config=True)
 
     def get_handlers(self, app):
         return [
-            (r'/login', CASLoginHandler),
-            (r'/logout', CASLogoutHandler),
+            (r"/login", CASLoginHandler),
+            (r"/logout", CASLogoutHandler),
         ]
 
     async def authenticate(self, *args):
