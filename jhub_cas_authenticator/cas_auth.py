@@ -70,10 +70,14 @@ class CASLoginHandler(BaseHandler):
                 app_log.debug("Attribute {0}: {1}".format(a, v))
             raise web.HTTPError(401)
 
-        # Check against whitelist
-        whitelist = self.authenticator.whitelist
-        if whitelist and user not in whitelist:
-            app_log.debug("User not in whitelist: {0}".format(user))
+        # Check against allow list
+        allow_list = None
+        if hasattr(self.authenticator, "allowed_users"):
+            allow_list = self.authenticator.allowed_users
+        elif hasattr(self.authenticator, "whitelist"):
+            allow_list = self.authenticator.whitelist
+        if allow_list and user not in allow_list:
+            app_log.debug("User not in allow_list: {0}".format(user))
             raise web.HTTPError(401)
 
         # Success!  Log user in.
